@@ -106,13 +106,27 @@ $ git remote -v
 $ git remote add <shortname> <url>
 ```
 
-从远程仓库中抓取与拉取：
+从远程仓库中抓取与拉取：(git fetch 更新你的远程仓库引用)
 
 ```bash
 $ git fetch [remote-name]
 ```
 
-必须注意 git fetch 命令会将数据拉取到你的本地仓库 - 它并不会自动合并或修改你当前的工作.当准备好时你必须手动将其合并入你的工作。
+必须注意 git fetch 命令会将数据拉取到你的本地仓库 - 它并不会自动合并或修改你当前的工作.
+
+要知道必须合并什么进入你的工作才能推送
+
+```bash
+$ git log --no-merges issue54..origin/master
+```
+
+issue54..origin/master 语法是一个日志过滤器，要求 Git 只显示所有在后面分支（在本例中是 origin/master）但不在前面分支（在本例中是 issue54）的提交的列表。
+
+当准备好时你必须手动将其合并入你的工作。
+
+```bash
+$ git merge [remote-name/remote-branch]
+```
 
 运行 git pull 通常会从最初克隆的服务器上抓取数据并自动尝试合并到当前所在的分支。
 
@@ -188,4 +202,85 @@ $ git branch [branch-name]
 $ git checkout [branch-name]
 ```
 
+分支的新建与合并：（大致的工作流程如下1-8步骤）
+
+1.在你为某个网站实现某个需求时，你需要在项目主分支master下创建了一个分支iss10，并在iss10上开展工作.
+
+```bash
+$ git checkout -b iss10 master
+$ vim index.html
+$ git commit -a -m 'added a new footer [issue 10]'
+```
+
+2.此时你突然接到BOSS电话，说有个严重的问题需要紧急修补.
+
+3.切换到你的线上分支（master）。
+
+4.为这个紧急任务新建一个分支，并在其中修复它。(3,4操作和合并为以下命令)
+
+```bash
+$ git checkout -b fixbug master
+$ git vim index.html
+$ git commit -a -m 'fixed the problem-[fixbug]'
+```
+
+5.在测试通过之后，切换回线上分支，然后合并这个修补分支，最后将改动推送到线上分支。(删除无用的bug分支)
+
+```bash
+$ git checkout master
+$ git merge --no-ff fixbug
+$ git commit -a -m 'merge fixbug and commit'
+$ git push [remote-name] [remote-branch]
+$ git branch -d fixbug
+```
+
+6.切换回你最初工作的分支上，继续工作.
+
+```bash
+$ git checkout iss10
+$ vim index.html
+$ git commit -a -m 'finished the new footer [issue 10]'
+```
+
+7.假设你已经修正了 #53问题，并且打算将你的工作合并入 master 分支。如果合并没有出现冲突，就可以删除iss10分支。
+
+```bash
+$ git checkout master
+$ git merge iss10
+$ git commit
+$ git branch -d iss10
+```
+
+8.如果分之合并遇到冲突，你需要去解决合并产生的冲突。
+使用 git status 查看冲突，然后手动解决冲突；在你解决了所有文件里的冲突之后，对每个文件使用 git add 命令来将其标记为冲突已解决。
+
+```bash
+$ git status
+$ git add <conflict file>
+$ git commit -a -m 'Handling conflicts'
+```
+
+查看每个分支的最后一次提交：
+
+```bash
+$ git branch -v
+```
+
+查看哪些分支已经合并到当前分支：
+
+```bash
+$ git branch --merged
+```
+
+查看所有包含未合并工作的分支:
+
+```bash
+$ git branch --no-merged
+```
+
+删除远程分支：
+
+```bash
+$ git push [remote-name] --delete [remote-branch]
+```
 
